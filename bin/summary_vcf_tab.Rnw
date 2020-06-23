@@ -1,0 +1,55 @@
+\documentclass[a4paper, titlepage]{article}
+\title{Report from argsIn[1]}
+\author{Bruce Moran}
+\date{}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\makeatletter
+\vspace*{\fill}
+{\centering\Huge\bfseries\@title\par}
+\vspace*{\fill}
+\makeatother
+
+\newpage
+\subsection*{Table}
+<<results=tex, echo=FALSE>>=
+@
+
+\newpage
+
+\subsection*{Per-Sample Variants}
+
+<<per_samp, fig=FALSE, echo=FALSE>>=
+per_samp
+<<per_samp_mh, fig=FALSE, echo=FALSE>>=
+per_samp_mh
+@
+\newpage
+
+\subsection*{Tumour Mutation Burden}
+
+<<per_samp_tmb, fig=FALSE, echo=FALSE>>=
+per_samp_tmb
+<<per_samp_mh_tmb, fig=FALSE, echo=FALSE>>=
+per_samp_mh_tmb
+@
+\newpage
+
+\subsection*{Plot 3}
+
+<<plot3, fig=TRUE, echo=FALSE>>=
+plot(rnorm(100))
+@
+\newpage
+
+\subsection*{Consequences of Variants}
+
+<<t1_cons, fig=FALSE, echo=FALSE>>=
+t1_cons
+<<t1_mh_cons, fig=FALSE, echo=FALSE>>=
+t1_mh_cons
+@
+
+\end{document}
