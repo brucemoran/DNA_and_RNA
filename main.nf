@@ -556,9 +556,7 @@ process vcf_report {
   """
   TOTMB=\$(grep - "@" $intlist | awk '{s+=\$3-\$2}END{print s}')
   perl ${workflow.projectDir}/bin/parse_merged_vcf.pl $vcf
-  TAB=\$(ls $vcf | sed 's/vcf$/tab/')
+  TAB=\$(ls $vcf | sed 's/vcf\\$/tab/')
   Rscript --vanilla ${workflow.projectDir}/bin/summary_vcf_tab.R \$TOTMB ${workflow.projectDir}/bin/summary_vcf_tab.Rnw
   """
 }
-    ##tabulate, parse and report
-    perl
