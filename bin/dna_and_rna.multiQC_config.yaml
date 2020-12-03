@@ -58,6 +58,9 @@ extra_fn_clean_exts:
     - _star_aligned
     - _fastqc
     - _pre
+    - _post
+    - _pre.fastp.json
+    - _post.fastp.json
     - type: remove
       pattern: '_STARpass1'
     - type: remove
