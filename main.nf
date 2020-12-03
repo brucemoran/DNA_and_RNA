@@ -33,49 +33,41 @@ if(!params.refDir){
   exit 1, "Please run: nextflow run refs.nf --outDir work -profile standard,singularity, then specify: nextflow run brucemoran/dna_and_rna --refDir work/refs"
 }
 
-/* -1: Global Variables
-*/
-// Reference data as params, and reusable therefore
-params.fasta = Channel.fromPath("$params.refDir/*.fa").getVal()
-process refbas {
-  executor 'local'
-  input:
-  file(fa) from Channel.value([params.fasta])
-  output:
-  stdout into refbass
-  script:
-  """
-  echo -n $fa | sed 's/\\.fa//'
-  """
-}
-params.refbase = refbass.getVal()
-
-params.fai = Channel.fromPath("$params.refDir/${params.refbase}.fa.fai").getVal()
-params.dict = Channel.fromPath("$params.refDir/${params.refbase}.dict").getVal()
-
-params.amb = Channel.fromPath("$params.refDir/${params.refbase}.fa.amb").getVal()
-params.ann = Channel.fromPath("$params.refDir/${params.refbase}.fa.ann").getVal()
-params.bwt = Channel.fromPath("$params.refDir/${params.refbase}.fa.bwt").getVal()
-params.pac = Channel.fromPath("$params.refDir/${params.refbase}.fa.pac").getVal()
-params.sa = Channel.fromPath("$params.refDir/${params.refbase}.fa.sa").getVal()
-
-//alllow to supply intList on command line for specific queries on genes
-if(!params.intList){
-  params.intlist = Channel.fromPath("$params.refDir/*.genes.interval_list").getVal()
-}
-if(params.intList){
-  params.intlist = Channel.fromPath("$params.refDir/${params.intList}").getVal()
-}
-
-params.dbsnp = Channel.fromPath("$params.refDir/*.vcf.gz").getVal()
-params.dbsnptbi = Channel.fromPath("$params.refDir/*.vcf.gz.tbi").getVal()
-
-params.star = Channel.fromPath("$params.refDir/STAR_*/", type:'dir').getVal()
-
-params.vepcache = Channel.fromPath("$params.refDir/.vep/", type:'dir').getVal()
-
 //Java task memory allocation via task.memory
 javaTaskmem = { it.replace(" GB", "g") }
+
+/Java task memory allocation via task.memory
+javaTaskmem = { it.replace(" GB", "g") }
+
+//Reference data as value channels and reusable therefore
+ref = [
+    fa: false,
+    fai: false,
+    dict: false,
+    bwa: false,
+    star: false,
+    saf: false,
+    intlist: false,
+    refflat: false,
+    rrna: false,
+    vcf: false,
+    vep: false,
+    exome: false
+]
+
+ref.fa = Channel.value(file(params.references.fa))
+ref.fai = Channel.value(file(params.references.fai))
+ref.dict = Channel.value(file(params.references.dict))
+ref.bwa = Channel.value(file(params.references.bwa))
+ref.star = Channel.value(file(params.references.star))
+ref.saf = Channel.value(file(params.references.saf))
+ref.intlist = Channel.value(file(params.references.intlist))
+ref.refflat = Channel.value(file(params.references.refflat))
+ref.vep = Channel.value(file(params.references.vep))
+ref.exome = Channel.value(file(params.references.exome))
+
+//setting of intlist based on exome extant
+reference.intlist = ref.exome == null ? ref.inlist : ref.exome
 
 /* 0.00: Input using sample.csv
 */
@@ -156,8 +148,8 @@ process bwamem {
 
   input:
   tuple val(type), val(sampleID), file(read1), file(read2) from bwa_mem_in
-  tuple file(fasta), file(fai), file(dict) from Channel.value([params.fasta, params.fai, params.dict])
-  tuple file(amb), file(ann), file(bwt), file(pac), file(sa) from Channel.value([params.amb, params.ann, params.bwt, params.pac, params.sa])
+  file(fa) from ref.fa
+  file(bwa) from ref.bwa
 
   output:
   tuple val(type), val(sampleID), file('*.bam'), file('*.bai') into markdups_bwa_in
@@ -174,8 +166,8 @@ process bwamem {
     -t${task.cpus} \
     -M \
     -R \$RGLINE \
-    $fasta \
-    $read1 $read2 | \
+    ${fa} \
+    ${read1} ${read2} | \
     samtools sort -T "tmp."$sampleID -o $sampleID".sort.bam"
   samtools index $sampleID".sort.bam"
   """
@@ -191,7 +183,7 @@ process star {
 
   input:
   tuple val(type), val(sampleID), file(read1), file(read2) from star_in
-  file(starDir) from Channel.value([params.star])
+  file(starDir) from ref.star
 
   output:
   file('*') into completedstar
@@ -276,9 +268,9 @@ process gtkrcl {
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gatk4recal_in
-  tuple file(fasta), file(fai), file(dict) from Channel.value([params.fasta, params.fai, params.dict])
-  tuple file(dbsnp), file(dbsnptbi) from Channel.value([params.dbsnp, params.dbsnptbi])
-  file(intlist) from Channel.value(params.intlist)
+  file(fa) from ref.fa
+  file(vcf) from ref.vcf
+  file(intlisd) from ref.intlist
 
   output:
   file('*.table') into gtkrcl_multiqc
@@ -286,13 +278,14 @@ process gtkrcl {
   file("${sampleID}.GATK4_BQSR.log.txt") into bqsr_log
 
   script:
+  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
   """
   {
   INBAM=$bam
   if [[ $type == "RNA" ]];then
     mkdir tmp
     gatk SplitNCigarReads \
-      -R $fasta \
+      -R $fa \
       -I $bam \
       --tmp-dir tmp \
       -O scn.bam
@@ -311,7 +304,7 @@ process gtkrcl {
   fi
 
   gatk BaseRecalibrator \
-    -R $fasta \
+    -R $fa \
     -I \$INBAM \
     --known-sites $dbsnp \
     --use-original-qualities \
@@ -322,7 +315,7 @@ process gtkrcl {
   #ApplyBQSR
   OUTBAM=\$(echo $bam | sed 's/bam/bqsr.bam/')
   gatk ApplyBQSR \
-    -R $fasta \
+    -R $fa \
     -I \$INBAM \
     --bqsr-recal-file ${sampleID}.recal_data.table \
     --add-output-sam-program-record \
@@ -346,9 +339,9 @@ process gatkHC {
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gatkhc_in
-  tuple file(fasta), file(fai), file(dict) from Channel.value([params.fasta, params.fai, params.dict])
-  tuple file(dbsnp), file(dbsnptbi) from Channel.value([params.dbsnp, params.dbsnptbi])
-  file(intlist) from Channel.value(params.intlist)
+  file(fa) from ref.fa
+  file(vcfd) from ref.vcf
+  file(intlisd) from ref.intlist
 
   output:
   tuple val(type), val(sampleID), file("${sampleID}.${type}.vcf.gz"), file("${sampleID}.${type}.vcf.gz.tbi") into merge_in
@@ -357,6 +350,8 @@ process gatkHC {
 
   script:
   taskmem = javaTaskmem("${task.memory}")
+  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
+  vcf = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
   """
   {
   INTTEST=\$(grep -m1 "@SQ" $intlist | perl -ane 'print \$F[0];')
@@ -369,12 +364,12 @@ process gatkHC {
   fi
 
   gatk --java-options -Xmx$taskmem HaplotypeCaller \
-    -R $fasta \
+    -R $fa \
     -I $bam \
     -ERC NONE \
     --dont-use-soft-clipped-bases \
     --standard-min-confidence-threshold-for-calling 20 \
-    --dbsnp $dbsnp \
+    --dbsnp $vcf \
     --pair-hmm-implementation FASTEST_AVAILABLE \
     --native-pair-hmm-threads ${task.cpus} \
     -O $sampleID"."$type".vcf" \
@@ -404,8 +399,6 @@ process mergevcfs {
 
   input:
   tuple val(first), file(vcfs) from merge_inc
-  tuple file(fasta), file(fai), file(dict) from Channel.value([params.fasta, params.fai, params.dict])
-  file(intlist) from Channel.value(params.intlist)
 
   output:
   file('all.dna_and_rna.merge.vcf') into vep_vcf
@@ -414,7 +407,6 @@ process mergevcfs {
   taskmem = javaTaskmem("${task.memory}")
   """
   {
-
     VCFS=\$(ls *.vcf.gz)
     bcftools merge -O z \$VCFS > all.dna_and_rna.merge.vcf
 
@@ -432,8 +424,8 @@ process mltmet {
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gmultimetric_in
-  tuple file(fasta), file(fai), file(dict) from Channel.value([params.fasta, params.fai, params.dict])
-  file(intlist) from Channel.value(params.intlist)
+  file(fa) from ref.fa
+  file(intlisd) from ref.intlist
 
   output:
   file('*.txt') into multimetrics_multiqc
@@ -443,13 +435,14 @@ process mltmet {
 
   script:
   taskmem = javaTaskmem("${task.memory}")
+  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
   """
   {
   picard -Xmx$taskmem CollectHsMetrics \
     I=$bam \
     O=$sampleID".hs_metrics.txt" \
     TMP_DIR=./ \
-    R=$fasta \
+    R=$fa \
     BAIT_INTERVALS=$intlist  \
     TARGET_INTERVALS=$intlist
 
@@ -457,19 +450,19 @@ process mltmet {
     I=$bam \
     O=$sampleID".AlignmentSummaryMetrics.txt" \
     TMP_DIR=./ \
-    R=$fasta
+    R=$fa
 
   picard -Xmx$taskmem CollectMultipleMetrics \
     I=$bam \
     O=$sampleID".CollectMultipleMetrics.txt" \
     TMP_DIR=./ \
-    R=$fasta
+    R=$fa
 
   picard -Xmx$taskmem CollectSequencingArtifactMetrics \
     I=$bam \
     O=$sampleID".artifact_metrics.txt" \
     TMP_DIR=./ \
-    R=$fasta
+    R=$fa
 
   picard -Xmx$taskmem CollectInsertSizeMetrics \
     I=$bam \
@@ -510,29 +503,29 @@ process vepann {
 
   input:
   file(vcf) from vep_vcf
-  tuple file(fasta), file(fai), file(dict) from Channel.value([params.fasta, params.fai, params.dict])
-  file(vepcache) from Channel.value([params.vepcache])
+  file(fa) from ref.fa
+  file(vepcache) from ref.vep
 
   output:
   file('*vep.vcf') into vcf_stats
 
   script:
+  vcfanno = "${vcf}".replaceAll(".vcf", ".vep.vcf")
   """
-  VCFANNO=\$(echo $vcf | sed "s/.vcf/.vep.vcf/")
   vep --dir_cache .vep \
     --offline \
-    --assembly ${params.vepgenome} \
+    --assembly ${params.vepGenome} \
     --vcf_info_field ANN \
     --symbol \
-    --species ${params.vepspecies} \
+    --species ${params.vepSpecies} \
     --check_existing \
     --cache \
     --fork ${task.cpus} \
     --vcf \
-    --input_file $vcf \
-    --output_file \$VCFANNO \
+    --input_file ${vcf} \
+    --output_file ${vcfanno} \
     --format "vcf" \
-    --fasta $fasta \
+    --fasta ${fa} \
     --hgvs \
     --canonical \
     --ccds \
