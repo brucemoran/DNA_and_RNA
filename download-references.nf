@@ -11,7 +11,7 @@ def helpMessage() {
   ---------------------------------------------------------------------------
   Usage:
 
-  nextflow run brucemoran/DNA_and_RNA/download-references.nf 
+  nextflow run brucemoran/DNA_and_RNA/download-references.nf
 
   Mandatory arguments:
     -profile      [str]   standard,singularity
@@ -47,18 +47,18 @@ process downloads {
   val(vepGenome) from Channel.value(params.vepGenome)
 
   output:
-  file("${vepGenome}_${vepVersion}.fa") into (fa_dict, fa_bwa, fa_star, fa_rrna, fa_gatk4)
-  file("${vepGenome}_${vepVersion}.gtf") into (gtf_star, gtf_rrna, gtf_gatk4, gtf_saf, gtf_refflat)
-  file("${vepGenome}_${vepVersion}.vcf") into vcf_tabix
+  file("${params.vepGenome}_${params.vepVersion}.fa") into (fa_dict, fa_bwa, fa_star, fa_rrna, fa_gatk4)
+  file("${params.vepGenome}_${params.vepVersion}.gtf") into (gtf_star, gtf_rrna, gtf_gatk4, gtf_saf, gtf_refflat)
+  file("${params.vepGenome}_${params.vepVersion}.vcf") into vcf_tabix
 
   """
-  wget -O ${vepGenome}_${vepVersion}".fa.gz" ${params.fa}
-  wget -O ${vepGenome}_${vepVersion}".gtf.gz" ${params.gtf}
-  wget -O ${vepGenome}_${vepVersion}".vcf.gz" ${params.vcf}
+  wget -O ${params.vepGenome}_${params.vepVersion}".fa.gz" ${params.fa}
+  wget -O ${params.vepGenome}_${params.vepVersion}".gtf.gz" ${params.gtf}
+  wget -O ${params.vepGenome}_${params.vepVersion}".vcf.gz" ${params.vcf}
 
-  gunzip ${vepGenome}_${vepVersion}".fa.gz"
-  gunzip ${vepGenome}_${vepVersion}".gtf.gz"
-  gunzip ${vepGenome}_${vepVersion}".vcf.gz"
+  gunzip ${params.vepGenome}_${params.vepVersion}".fa.gz"
+  gunzip ${params.vepGenome}_${params.vepVersion}".gtf.gz"
+  gunzip ${params.vepGenome}_${params.vepVersion}".vcf.gz"
   """
 }
 
