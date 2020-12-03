@@ -11,7 +11,7 @@ def helpMessage() {
   ---------------------------------------------------------------------------
   Usage:
 
-  nextflow run brucemoran/DNA_and_RNA/refs.nf
+  nextflow run brucemoran/DNA_and_RNA/download-references.nf 
 
   Mandatory arguments:
     -profile      [str]   standard,singularity
