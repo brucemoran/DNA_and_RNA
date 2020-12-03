@@ -42,6 +42,7 @@ process downloads {
   publishDir path: "${params.refDir}/gtf", mode: "copy", pattern: "*gtf"
   publishDir path: "${params.refDir}/fa", mode: "copy", pattern: "*fa"
   publishDir path: "${params.refDir}/vcf", mode: "copy", pattern: "*vcf"
+  publishDir path: "${params.refDir}/bwa", mode: "symlink", pattern: "*.fa"
 
   input:
   val(vepGenome) from Channel.value(params.vepGenome)
@@ -66,7 +67,7 @@ process downloads {
 process dictionary_pr {
 
   publishDir path: "${params.refDir}/fa", mode: "copy"
-  publishDir path: "${params.refDir}/bwa", mode: "symlink", pattern: "*[.fa, .dict]"
+  publishDir path: "${params.refDir}/bwa", mode: "symlink", pattern: "*.dict"
 
   input:
   file(fa) from fa_dict
