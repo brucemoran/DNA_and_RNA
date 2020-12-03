@@ -189,7 +189,7 @@ process indexfeaturefile_pr {
  */
 process star_index {
 
-  publishDir "$params.refDir/star_${params.sjdb}", mode: "copy"
+  publishDir "$params.refDir/star_${sjdbd}", mode: "copy"
 
   input:
   file(fa) from fa_star
@@ -199,19 +199,16 @@ process star_index {
   file('*') into completedstargg
 
   script:
+  sjdbd = "${sjdb - 1}"
+  ram = "${task.memory}".replaceAll(" G", "000000000")
   """
-  #! /bin/bash
-  let SJDB=${params.sjdb}-1
-  mkdir -p STAR_\$SJDB
-
-  RAM=\$(echo ${task.memory} | sed 's/ G/000000000/')
   STAR --runMode genomeGenerate \
-    --genomeDir STAR_\$SJDB \
-    --genomeFastaFiles $fa \
-    --sjdbGTFfile $gtf \
-    --sjdbOverhang \$SJDB \
+    --genomeDir ./ \
+    --genomeFastaFiles ${fa} \
+    --sjdbGTFfile ${gtf} \
+    --sjdbOverhang ${sjdbd} \
     --runThreadN ${task.cpus} \
-    --limitGenomeGenerateRAM \$RAM
+    --limitGenomeGenerateRAM ${ram}
   """
 }
 
