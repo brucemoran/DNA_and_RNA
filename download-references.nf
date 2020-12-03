@@ -189,7 +189,7 @@ process indexfeaturefile_pr {
  */
 process star_index {
 
-  publishDir "$params.refDir/star", mode: "copy"
+  publishDir "$params.refDir/star_${params.sjdb}", mode: "copy"
 
   input:
   file(fa) from fa_star
