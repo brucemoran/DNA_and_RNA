@@ -32,7 +32,7 @@ def helpMessage() {
 if (params.help) exit 0, helpMessage()
 
 // 0.0: Global Variables
-//refDir output, tag
+//refDir output, tag 
 params.refDir = "${params.vepGenome}_${params.vepVersion}"
 params.tag = Channel.from("${params.vepGenome}_${params.vepVersion}").getVal()
 
