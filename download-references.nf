@@ -327,7 +327,7 @@ process gtfsaf_pr {
   """
 }
 
-// 8.0 VEP
+// 8.0 VEP 
 process vep_install {
 
   publishDir path: "${params.refDir}", mode: 'copy'
