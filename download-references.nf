@@ -65,14 +65,13 @@ process downloads {
 // 1.1: Dictionary of fa
 process dictionary_pr {
 
-  publishDir path: "${params.refDir}/fa", mode: "copy", pattern: "*.dict"
+  publishDir path: "${params.refDir}/fa", mode: "copy"
 
   input:
   file(fa) from fa_dict
 
   output:
-  file('*.dict') into (dict_bwa, dict_window, dict_exome, dict_rrna, dict_gatk4)
-  file('*') into completeddict
+  file("${dict}") into (dict_bwa, dict_window, dict_exome, dict_rrna, dict_gatk4)
 
   script:
   dict = "${fa}".replaceAll(".fa", ".dict")
@@ -102,22 +101,21 @@ process bwa_index {
   """
 }
 
-// 2.1: Fasta processing
-
-process lnsta {
+// 2.1: Fasta link
+process ln_bwa {
 
   input:
   file(fa) into complete_bwa
 
   script:
   """
+  sleep 1000
   ln -s ${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.fa ${params.refDir}/bwa/
   ln -s ${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.dict ${params.refDir}/bwa/
   """
 }
 
 // 2.2: Bed for exome
-
 process exomebed_pr {
 
   publishDir path: "${params.refDir}/exome", mode: "copy"
@@ -157,7 +155,6 @@ process exomebed_pr {
 }
 
 // 2.3: Tabix those requiring tabixing
-
 process vcf_pr {
 
   publishDir path: "${params.refDir}/exome", mode: "copy"
@@ -178,7 +175,6 @@ process vcf_pr {
 }
 
 // 2.4: Tabix those requiring tabixing
-
 process indexfeaturefile_pr {
 
   publishDir path: "${params.refDir}/vcf", mode: "copy"
@@ -199,7 +195,6 @@ process indexfeaturefile_pr {
 }
 
 // 3.0: STAR geneomeGenerate
-
 process star_index {
 
   publishDir "${params.refDir}/star_${sjdbd}", mode: "copy", pattern: "*[!.fa, !.gtf]"
@@ -226,7 +221,6 @@ process star_index {
 }
 
 // 4.0: refFlat conversion of GTF
-
 process reflat_pr {
 
   publishDir "${params.refDir}/refflat", mode: "copy"
@@ -235,7 +229,7 @@ process reflat_pr {
   file(gtf) from gtf_refflat
 
   output:
-  file("${gtf}.refflat") into completedrefflat
+  file("${reff_out}") into completedrefflat
 
   script:
   reff_out = "${gtf}".replaceAll(".gtf", ".refFlat")
@@ -249,7 +243,6 @@ process reflat_pr {
 }
 
 // 5.0: rRNA_intervalList
-
 process rrna_pr {
 
   publishDir "${params.refDir}/rrna", mode: "copy"
@@ -327,7 +320,6 @@ process gatk4snv_pr {
 }
 
 // 7.0 SAF for featureCounts
-
 process gtfsaf_pr {
 
   publishDir path: "${params.refDir}/saf", mode: 'copy'
@@ -348,7 +340,6 @@ process gtfsaf_pr {
 }
 
 // 8.0 VEP
-
 process vep_install {
 
   publishDir path: "${params.refDir}", mode: 'copy'
