@@ -541,22 +541,22 @@ process vepann {
   """
 }
 
-process vcf_report {
-
-  publishDir path: "analysis/DNA_and_RNA/output/vcf", mode: "copy", pattern: '*.vcf'
-
-  input:
-  file(vcf) from vcf_stats
-  file(intlist) from Channel.value([params.intlist])
-
-  output:
-  file('*.vcf') into vcf_stats
-
-  script:
-  """
-  TOTMB=\$(grep - "@" $intlist | awk '{s+=\$3-\$2}END{print s}')
-  perl ${workflow.projectDir}/bin/parse_merged_vcf.pl $vcf
-  TAB=\$(ls $vcf | sed 's/vcf\$/tab/')
-  Rscript --vanilla ${workflow.projectDir}/bin/summary_vcf_tab.R \$TOTMB ${workflow.projectDir}/bin/summary_vcf_tab.Rnw
-  """
-}
+// process vcf_report {
+//
+//   publishDir path: "analysis/DNA_and_RNA/output/vcf", mode: "copy", pattern: '*.vcf'
+//
+//   input:
+//   file(vcf) from vcf_stats
+//   file(intlist) from Channel.value([params.intlist])
+//
+//   output:
+//   file('*.vcf') into vcf_stats
+//
+//   script:
+//   """
+//   TOTMB=\$(grep - "@" $intlist | awk '{s+=\$3-\$2}END{print s}')
+//   perl ${workflow.projectDir}/bin/parse_merged_vcf.pl $vcf
+//   TAB=\$(ls $vcf | sed 's/vcf\$/tab/')
+//   Rscript --vanilla ${workflow.projectDir}/bin/summary_vcf_tab.R \$TOTMB ${workflow.projectDir}/bin/summary_vcf_tab.Rnw
+//   """
+// }
