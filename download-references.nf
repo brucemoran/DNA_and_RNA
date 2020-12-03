@@ -4,76 +4,68 @@
 //autoruns if --refDir is not supplied, or doesn't exist, or not all required files therein
 //can be used alone to generate DNA, RNA references based on user supplying ENSEMBL URLs in config
 
-params.help = ""
+def helpMessage() {
+  log.info"""
+  ---------------------------------------------------------------------------
+            REFERENCE FILES FOR 'DNA_and_RNA' NEXTFLOW PIPELINE
+  ---------------------------------------------------------------------------
+  Usage:
 
-if (params.help) {
-  log.info ''
-  log.info '----------------------------------------------------------------------------'
-  log.info 'NEXTFLOW: MAKE REFERENCE FILES AND INDICES FOR DNA_and_RNA NEXTFLOW PIPELINE'
-  log.info '----------------------------------------------------------------------------'
-  log.info ''
-  log.info 'Usage: '
-  log.info 'nextflow run refs.nf -profile standard,singularity'
-  log.info ''
-  log.info 'Optional arguments:'
-  log.info '--exomeBed  STRING  path/to/exome.bed; exome corresponding to DNAseq data; determines regions included in analysis'
-  log.info '--outDir  STRING  path/to/output/; where output is stored (default: ./refs/vepgenome)'
-  log.info '--fa      STRING  URL to download fasta.gz'
-  log.info '--gtf      STRING  URL to download gtf.gz'
-  log.info '--cdna      STRING  URL to download cdna.gz'
-  log.info '--vcf      STRING  URL to download known SNPs (vcf.gz)'
-  log.info '--vepgenome     STRING  short identifier of genome assemby e.g. "Rnor_6.0"'
-  log.info '--vepspecies      STRING  VEP species corresponding to vepgenome e.g. rattus_norveigcus'
-  log.info '--vepversion      INT  VEP version e.g. 100'
-  log.info '--sjdb      INT  length of reads in bp for STAR index (default: 100)'
-  log.info ''
-  exit 1
+  nextflow run brucemoran/DNA_and_RNA/refs.nf
+
+  Mandatory arguments:
+    -profile      [str]   standard,singularity
+    --fa          [str]   URL to download fasta.gz
+    --gtf         [str]   URL to download gtf.gz
+    --cdna        [str]   URL to download cdna.gz
+    --vcf         [str]   URL to download known SNPs (vcf.gz)
+    --vepGenome   [str]   short identifier of genome assemby e.g. "Rnor_6.0"
+    --vepSpecies  [str]   VEP species corresponding to vepGenome e.g. "rattus_norveigcus"
+    --vepVersion  [int]   VEP version e.g. 100
+    --sjdb        [int]   length of reads in bp for STAR index (default: 100)
+
+  Optional arguments:
+    --exomeBed    [str]   path/to/exome.bedcorresponding to DNAseq data; determines regions included in analysis
+  """.stripIndet()
 }
 
-/* 0.0: Global Variables
-*/
-if(params.outDir){
-  params.refDir = "$params.outDir"
-}
-if(!params.outDir){
-  params.refDir = "refs/$params.vepgenome"
-}
+if (params.help) exit 0, helpMessage()
 
-params.tag = Channel.from("$params.vepgenome").getVal()
+// 0.0: Global Variables
+//refDir output, tag
+params.refDir = "refs/${params.vepGenome}_${params.vepVersion}"
+params.tag = Channel.from("${params.vepGenome}_${params.vepVersion}").getVal()
 
-/* 1.0: Download required files
-*/
+// 1.0: Download required files
 process downloads {
 
-  publishDir path: "$params.refDir", mode: "copy"
+  publishDir path: "$params.refDir/gtf", mode: "copy", pattern: "*gtf"
+  publishDir path: "$params.refDir/fa", mode: "copy", pattern: "*fa"
+  publishDir path: "$params.refDir/vcf", mode: "copy", pattern: "*vcf"
 
   input:
-  val(vepgenome) from Channel.value(params.vepgenome)
+  val(vepGenome) from Channel.value(params.vepGenome)
 
   output:
-  file("${vepgenome}.fa") into (fa_dict, fa_bwa, fa_star, fa_rrna, fa_gatk4)
-  file("${vepgenome}.gtf") into (gtf_star, gtf_rrna, gtf_gatk4, gtf_saf, gtf_refflat)
-  file("${vepgenome}.vcf") into vcf_tabix
+  file("${vepGenome}_${vepVersion}.fa") into (fa_dict, fa_bwa, fa_star, fa_rrna, fa_gatk4)
+  file("${vepGenome}_${vepVersion}.gtf") into (gtf_star, gtf_rrna, gtf_gatk4, gtf_saf, gtf_refflat)
+  file("${vepGenome}_${vepVersion}.vcf") into vcf_tabix
 
   """
-  wget -O $vepgenome".fa.gz" ${params.ftpbase}/${params.fa}
-  wget -O $vepgenome".gtf.gz" ${params.ftpbase}/${params.gtf}"."${params.vepversion}".gtf.gz"
-  if [[ ${params.vcf} =~ ^http ]];then
-    wget -O $vepgenome".vcf.gz" ${params.vcf}
-  else
-    wget -O $vepgenome".vcf.gz" ${params.ftpbase}/${params.vcf}
-  fi
-  gunzip $vepgenome".fa.gz"
-  gunzip $vepgenome".gtf.gz"
-  gunzip $vepgenome".vcf.gz"
+  wget -O ${vepGenome}_${vepVersion}".fa.gz" ${params.fa}
+  wget -O ${vepGenome}_${vepVersion}".gtf.gz" ${params.gtf}
+  wget -O ${vepGenome}_${vepVersion}".vcf.gz" ${params.vcf}
+
+  gunzip ${vepGenome}_${vepVersion}".fa.gz"
+  gunzip ${vepGenome}_${vepVersion}".gtf.gz"
+  gunzip ${vepGenome}_${vepVersion}".vcf.gz"
   """
 }
 
-/* 1.1: dictionary
-*/
+// 1.1: Dictionary of fa
 process dictionary_pr {
 
-  publishDir path: "$params.refDir", mode: "copy"
+  publishDir path: "$params.refDir/fa", mode: "copy", pattern: "*.dict"
 
   input:
   file(fa) from fa_dict
@@ -82,23 +74,19 @@ process dictionary_pr {
   file('*.dict') into (dict_bwa, dict_window, dict_exome, dict_rrna, dict_gatk4)
   file('*') into completeddict
 
+  script:
+  dict = "${fa}".replaceAll(".fa", ".dict")
   """
-  DICTO=\$(echo $fa | sed 's/fa/dict/')
   picard CreateSequenceDictionary \
     R=$fa \
-    O=\$DICTO
-
-  perl -ane 'if(\$F[0]=~m/SQ\$/){@sc=split(/:/,\$F[1]);@ss=split(/:/,\$F[2]); if(\$sc[1]!~m/[GLMT]/){ print "\$sc[1]\\t\$ss[1]\\n";}}' \$DICTO > seq.dict.chr-size
-
-  bedtools makewindows -g seq.dict.chr-size -w 35000000 | perl -ane 'if(\$F[1]==0){\$F[1]++;};print "\$F[0]:\$F[1]-\$F[2]\n";' > 35MB-window.bed
+    O=$dict
   """
 }
 
-/* 2.0: Fasta processing
-*/
+// 2.0: Fasta processing
 process bwa_index {
 
-  publishDir path: "$params.refDir", mode: "copy"
+  publishDir path: "$params.refDir/bwa", mode: "copy", pattern: "*[!.fa, !.dict]"
 
   input:
   file(fa) from fa_bwa
@@ -111,6 +99,8 @@ process bwa_index {
   ##https://gatkforums.broadinstitute.org/gatk/discussion/2798/howto-prepare-a-reference-for-use-with-bwa-and-gatk
   samtools faidx $fa
   bwa index -a bwtsw $fa
+  ln -s ${fa} ${params.refDir}/bwa/
+  ln -s ${dict} ${params.refDir}/bwa/
   """
 }
 
@@ -119,7 +109,7 @@ process bwa_index {
 */
 process exomebed_pr {
 
-  publishDir path: "$params.refDir", mode: "copy"
+  publishDir path: "$params.refDir/exome", mode: "copy"
 
   input:
   file(dict) from dict_exome
@@ -135,10 +125,10 @@ process exomebed_pr {
   """
   ##test if all chr in fasta are in exome
   ##test if all regions are greater than length zero
-  if [[ "$exome_bed" =~ ".gz" ]]; then
-    gunzip -c $exome_bed > exome_bed;
+  if [[ "${exome_bed}" =~ ".gz" ]]; then
+    gunzip -c ${exome_bed} > exome_bed;
   else
-    cat $exome_bed > exome_bed
+    cat ${exome_bed} > exome_bed
   fi
   perl -ane 'if(\$F[1] == \$F[2]){\$F[2]++;} if(\$F[0] !~m/^chrM/){print join("\\t", @F[0..\$#F]) . "\\n";}' exome_bed | grep -v chrM | sed 's/chr//g' > tmp.bed
 
@@ -159,7 +149,7 @@ process exomebed_pr {
 */
 process vcf_pr {
 
-  publishDir path: "$params.refDir", mode: "copy"
+  publishDir path: "$params.refDir/vcf", mode: "copy"
 
   input:
   file(tbtbx) from exome_tabix
@@ -178,7 +168,7 @@ process vcf_pr {
 
 process indexfeaturefile_pr {
 
-  publishDir path: "$params.refDir", mode: "copy"
+  publishDir path: "$params.refDir/vcf", mode: "copy"
 
   input:
   file(tbtbx) from vcf_tabix
@@ -199,7 +189,7 @@ process indexfeaturefile_pr {
  */
 process star_index {
 
-  publishDir "$params.refDir", mode: "copy"
+  publishDir "$params.refDir/star", mode: "copy"
 
   input:
   file(fa) from fa_star
@@ -229,7 +219,7 @@ process star_index {
  */
 process reflat_pr {
 
-  publishDir "$params.refDir", mode: "copy", pattern: "refFlat*"
+  publishDir "$params.refDir/refFlat", mode: "copy", pattern: "*.refFlat"
 
   input:
   file(gtf) from gtf_refflat
@@ -254,7 +244,7 @@ process reflat_pr {
  */
 process rrna_pr {
 
-  publishDir "$params.refDir", mode: "copy", pattern: "rRNA*"
+  publishDir "$params.refDir/rrna", mode: "copy", pattern: "${fa}.dict.rRNA.interval_list"
 
   input:
   file(fa) from fa_rrna
@@ -285,7 +275,7 @@ process rrna_pr {
 */
 process gatk4snv_pr {
 
-  publishDir path: "$params.refDir", mode: 'copy'
+  publishDir path: "$params.refDir/intlist", mode: 'copy'
 
   input:
   file(fa) from fa_gatk4
@@ -295,6 +285,8 @@ process gatk4snv_pr {
   output:
   file('*') into gatk4all
 
+  script:
+  geneintlist = "${gtf}".replaceAll(".gtf", ".genes.interval_list")
   """
   samtools faidx $fa
 
@@ -302,7 +294,6 @@ process gatk4snv_pr {
   perl -ane 'if(\$F[0]=~m/SQ\$/){@sc=split(/:/,\$F[1]);@ss=split(/:/,\$F[2]); if(\$sc[1]!~m/[GLMT]/){ print "\$sc[1]\\t\$ss[1]\\n";}}' $dict > seq.dict.chr-size.dict
 
   ##make GTF bed for 'gene'
-  GENEINTLIST=\$(echo $gtf | sed 's/\\.gtf/\\.genes\\.interval_list/')
   cat $gtf | perl -ane 'if(\$F[2] eq "gene"){print "\$F[0]\\t\$F[3]\\t\$F[4]\\n";}' | \
     perl -ane 'if((\$F[0]=~m/^chr/) || (\$F[0]=~m/^[0-9]/)){\$_=~s/chr//g;print \$_;}' > genes.bed
 
@@ -317,16 +308,16 @@ process gatk4snv_pr {
       export CHR;
       sort -V genes.bed | perl -ane 'if(\$F[0] eq \$ENV{CHR}){print \$_;}else{next;}'
     done > 1
-    picard BedToIntervalList I=1 O=\$GENEINTLIST SD=$dict
+    picard BedToIntervalList I=1 O=${geneintlist} SD=${dict}
     rm 1
   else
-    picard BedToIntervalList I=genes.bed O=\$GENEINTLIST SD=$dict
+    picard BedToIntervalList I=genes.bed O=${geneintlist} SD=${dict}
   fi
 
   ##tabix
-  bgzip \$GENEINTLIST
-  gunzip -c \$GENEINTLIST".gz" > \$GENEINTLIST
-  tabix \$GENEINTLIST".gz"
+  bgzip ${geneintlist}
+  gunzip -c ${geneintlist}.gz > ${geneintlist}
+  tabix ${geneintlist}.gz
   """
 }
 
@@ -334,7 +325,7 @@ process gatk4snv_pr {
 */
 process gtfsaf_pr {
 
-  publishDir path: "$params.refDir", mode: 'copy'
+  publishDir path: "$params.refDir/saf", mode: 'copy'
 
   input:
   file(gtf) from gtf_saf
@@ -342,11 +333,12 @@ process gtfsaf_pr {
   output:
   file('*.saf') into saf_out
 
+  script:
+  saf = "${gtf}".replaceAll(".gtf", ".saf")
   """
   ##make SAF format from gtf
-  SAF=\$(echo $gtf | sed 's/\\.gtf/\\.saf/')
-  echo -e "GeneID\\tChr\\tStart\\tEnd\\tStrand" > \$SAF
-  grep -v "#" $gtf | perl -ane 'chomp;if(\$F[2] eq "gene"){\$g=\$F[9];\$g=~s/[";]//g;print "\$g\\t\$F[0]\\t\$F[3]\\t\$F[4]\\t\$F[6]\\n";}' >> \$SAF
+  echo -e "GeneID\\tChr\\tStart\\tEnd\\tStrand" > ${saf}
+  grep -v "#" $gtf | perl -ane 'chomp;if(\$F[2] eq "gene"){\$g=\$F[9];\$g=~s/[";]//g;print "\$g\\t\$F[0]\\t\$F[3]\\t\$F[4]\\t\$F[6]\\n";}' >> ${saf}
   """
 }
 
@@ -361,13 +353,13 @@ process vep_install {
   """
   {
   mkdir -p .vep && cd .vep
-  wget ftp://ftp.ensembl.org/pub/release-${params.vepversion}/variation/indexed_vep_cache/${params.vepspecies}_vep_${params.vepversion}_${params.vepgenome}.tar.gz
+  wget ftp://ftp.ensembl.org/pub/release-${params.vepVersion}/variation/indexed_vep_cache/${params.vepSpecies}_vep_${params.vepVersion}_${params.vepGenome}.tar.gz
 
   cd ../
   vep_install \
-    --ASSEMBLY ${params.vepgenome} \
-    --SPECIES ${params.vepspecies} \
-    --VERSION ${params.vepversion} \
+    --ASSEMBLY ${params.vepGenome} \
+    --SPECIES ${params.vepSpecies} \
+    --VERSION ${params.vepVersion} \
     --PLUGINS dbNSFP \
     --AUTO cp \
     --CACHEURL .vep \
@@ -376,6 +368,6 @@ process vep_install {
     --NO_TEST \
     --NO_UPDATE
 
-  } 2>&1 | tee > vep_install.log
+  } 2>&1 | tee > ${params.vepGenome}_${params.vepVersion}.vep_install.log
   """
 }
