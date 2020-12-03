@@ -17,7 +17,15 @@ if (params.help) {
   log.info ''
   log.info 'Optional arguments:'
   log.info '--exomeBed  STRING  path/to/exome.bed; exome corresponding to DNAseq data; determines regions included in analysis'
-  log.info '--outDir  STRING  path/to/output/; where output is stored'
+  log.info '--outDir  STRING  path/to/output/; where output is stored (default: ./refs/vepgenome)'
+  log.info '--fa      STRING  URL to download fasta.gz'
+  log.info '--gtf      STRING  URL to download gtf.gz'
+  log.info '--cdna      STRING  URL to download cdna.gz'
+  log.info '--vcf      STRING  URL to download known SNPs (vcf.gz)'
+  log.info '--vepgenome     STRING  short identifier of genome assemby e.g. "Rnor_6.0"'
+  log.info '--vepspecies      STRING  VEP species corresponding to vepgenome e.g. rattus_norveigcus'
+  log.info '--vepversion      INT  VEP version e.g. 100'
+  log.info '--sjdb      INT  length of reads in bp for STAR index (default: 100)'
   log.info ''
   exit 1
 }

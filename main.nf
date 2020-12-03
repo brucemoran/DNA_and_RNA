@@ -560,5 +560,3 @@ process vcf_report {
   Rscript --vanilla ${workflow.projectDir}/bin/summary_vcf_tab.R \$TOTMB ${workflow.projectDir}/bin/summary_vcf_tab.Rnw
   """
 }
-    ##tabulate, parse and report
-    perl
