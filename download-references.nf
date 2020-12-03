@@ -199,7 +199,7 @@ process star_index {
   file('*') into completedstargg
 
   script:
-  sjdbd = "${sjdb - 1}"
+  sjdbd = "${params.sjdb - 1}"
   ram = "${task.memory}".replaceAll(" G", "000000000")
   """
   STAR --runMode genomeGenerate \
