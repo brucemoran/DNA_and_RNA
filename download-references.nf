@@ -42,6 +42,7 @@ process downloads {
   publishDir path: "${params.refDir}/gtf", mode: "copy", pattern: "*gtf"
   publishDir path: "${params.refDir}/fa", mode: "copy", pattern: "*fa"
   publishDir path: "${params.refDir}/vcf", mode: "copy", pattern: "*vcf"
+  publishDir path: "${params.refDir}/bwa", mode: "link", pattern: "*.fa"
 
   input:
   val(vepGenome) from Channel.value(params.vepGenome)
@@ -66,6 +67,7 @@ process downloads {
 process dictionary_pr {
 
   publishDir path: "${params.refDir}/fa", mode: "copy"
+  publishDir path: "${params.refDir}/bwa", mode: "link", pattern: "*.dict"
 
   input:
   file(fa) from fa_dict
@@ -98,20 +100,6 @@ process bwa_index {
   ##https://gatkforums.broadinstitute.org/gatk/discussion/2798/howto-prepare-a-reference-for-use-with-bwa-and-gatk
   samtools faidx ${fa}
   bwa index -a bwtsw ${fa}
-  """
-}
-
-// 2.1: Fasta link
-process ln_bwa {
-
-  input:
-  file(fa) from complete_bwa
-
-  script:
-  """
-  sleep 1000
-  ln -s ${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.fa ${params.refDir}/bwa/
-  ln -s ${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.dict ${params.refDir}/bwa/
   """
 }
 
@@ -339,7 +327,7 @@ process gtfsaf_pr {
   """
 }
 
-// 8.0 VEP
+// 8.0 VEP 
 process vep_install {
 
   publishDir path: "${params.refDir}", mode: 'copy'
