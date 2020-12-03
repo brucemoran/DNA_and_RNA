@@ -105,7 +105,7 @@ process bwa_index {
 process ln_bwa {
 
   input:
-  file(fa) into complete_bwa
+  file(fa) from complete_bwa
 
   script:
   """
