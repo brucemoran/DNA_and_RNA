@@ -63,7 +63,7 @@ ref.vep = Channel.value(file(params.references['genome'].vep))
 ref.exome = Channel.value(file(params.references['genome'].exome))
 
 //setting of intlist based on exome extant (if not extant cant mkdir in it)
-ref.intlist = file(params.references['genome'].exome + "/made").mkdir() ? ref.inlist : ref.exome
+ref.intlist = file(params.references['genome'].exome + "/made").mkdir() ? ref.exome : ref.inlist
 
 // 0.00: Input using sample.csv
 Channel.fromPath("$params.sampleCsv")
