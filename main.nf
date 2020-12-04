@@ -10,9 +10,9 @@ def helpMessage() {
   Mandatory arguments:
       -profile          [str]   Configuration profile (required: standard,singularity)
       --sampleCsv       [str]   CSV format, headers: type (either "DNA" or "RNA"),sampleID,/path/to/read1.fq.gz,/path/to/read2.fq.gz
-      --refDir          [str]   dir in which reference data and required indices are held; created by download-references.nf; this is the base dir of vepGenome_vepVersion dir with references therein
-      --vepGenome       [str]   VEP genome ID used in creating refDir/vepGenome_vepVersion/* (e.g. "Rnor_6")
-      --vepVersion      [int]   VEP version used in creating refDir/vepGenome_vepVersion/* (e.g. 100)
+      --refsDir          [str]   dir in which reference data and required indices are held; created by download-references.nf; this is the base dir of vepGenome_vepVersion dir with references therein
+      --vepGenome       [str]   VEP genome ID used in creating refDir params.vepGenome_params/vepVersion/ (e.g. "Rnor_6")
+      --vepVersion      [int]   VEP version used in creating refDir params.vepGenome_params/vepVersion/ (e.g. 100)
       --vepSpecies      [str]   VEP species for (e.g. "rattus_norvegicus")
 
   Optional arguments:
@@ -25,9 +25,12 @@ def helpMessage() {
 if (params.help) exit 0, helpMessage()
 
 // -2 Test if refDir is defined, if not run DNAseq_references pipeline under defaults
-if(!params.refDir){
-  exit 1, "Please run: nextflow run refs.nf --outDir work -profile standard,singularity, then specify: nextflow run brucemoran/dna_and_rna --refDir work/refs"
+if(!params.refsDir){
+  exit 1, "Please run: nextflow run brucemoran/DNA_and_RNA/download-references.nf --help"
 }
+
+//-1 outDir
+params.outDir = "DNA_and_RNA_output"
 
 //Java task memory allocation via task.memory
 javaTaskmem = { it.replace(" GB", "g") }
