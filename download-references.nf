@@ -196,7 +196,7 @@ process indexfeaturefile_pr {
 // 3.0: STAR geneomeGenerate
 process star_index {
 
-  publishDir "${params.outDir}/star/star_${sjdbd}", mode: "copy", pattern: "[!*.fa, !*.gtf]"
+  publishDir "${params.outDir}/star/star_${sjdbd}", mode: "copy"
 
   input:
   file(fa) from fa_star
