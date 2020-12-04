@@ -109,8 +109,8 @@ process ln_bwa {
 
   script:
   """
-  ln -s ${workflow.projectDir}/${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.fa ${params.refDir}/bwa/
-  ln -s ${workflow.projectDir}/${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.dict ${params.refDir}/bwa/
+  ln -s ${workflow.launchDir}/${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.fa ${params.refDir}/bwa/
+  ln -s ${workflow.launchDir}/${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.dict ${params.refDir}/bwa/
   """
 }
 
