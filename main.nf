@@ -512,7 +512,7 @@ process vepann {
   script:
   vcfanno = "${vcf}".replaceAll(".vcf", ".vep.vcf")
   """
-  vep --dir_cache .vep \
+  vep --dir_cache ${vepcache} \
     --offline \
     --assembly ${params.vepGenome} \
     --vcf_info_field ANN \
