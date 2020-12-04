@@ -1,29 +1,54 @@
 #!/usr/bin/env nextflow
+def helpMessage() {
+  log.info"""
+  -----------------------------------------------------------------------
+               DNA and RNA QC, TRIM, ALIGN, MUTATION CALLING
+  -----------------------------------------------------------------------
+  Usage:
+    nextflow run brucemoran/dna_and_rna
+
+  Mandatory arguments:
+      -profile          [str]   Configuration profile (required: standard,singularity)
+      --sampleCsv       [str]   CSV format, headers: type (either "DNA" or "RNA"),sampleID,/path/to/read1.fq.gz,/path/to/read2.fq.gz
+      --refDir          [str]   dir in which reference data and required indices are held; created by download-references.nf; this is the base dir of vepGenome_vepVersion dir with references therein
+      --vepGenome       [str]   VEP genome ID used in creating refDir/vepGenome_vepVersion/* (e.g. "Rnor_6")
+      --vepVersion      [int]   VEP version used in creating refDir/vepGenome_vepVersion/* (e.g. 100)
+      --vepSpecies      [str]   VEP species for (e.g. "rattus_norvegicus")
+
+  Optional arguments:
+      --multiqcConfig   [str]   config file for multiqc (default: bin/dna_and_rna.multiQC_config.yaml)
+      --intList         [str]   path/to/interval.list in chr:start-end for interval calling (default: standardly made reference interval list for species)
+
+    """.stripIndet()
+}
+
+if (params.help) exit 0, helpMessage()
 
 params.help = ""
 
 if (params.help) {
-  log.info ''
-  log.info '------------------------------------------------------------'
-  log.info 'NEXTFLOW 19.10 DNA AND RNA QC, TRIM, ALIGN, MUTATION CALLING'
-  log.info '------------------------------------------------------------'
-  log.info ''
-  log.info 'Purpose: '
-  log.info 'Analyse matched RNA- and DNA-seq, determine extent of same SNP, INDELs'
-  log.info ''
-  log.info 'Usage: '
-  log.info 'nextflow run brucemoran/dna_and_rna'
-  log.info ''
-  log.info 'Mandatory arguments:'
-  log.info '    -profile    Configuration profile (required: standard,singularity)'
-  log.info '    --sampleCsv      STRING      CSV format, headers: type (either "DNA" or "RNA"),sampleID,/path/to/read1.fq.gz,/path/to/read2.fq.gz'
-  log.info '    --refDir        STRING      dir in which reference data and required indices are held; if not specified, run refs.nf'
-  log.info ''
-  log.info 'Optional arguments:'
-  log.info '    --outDir        STRING        path/to/output'
-  log.info '    --multiqcConfig      STRING      config file for multiqc (default: bin/dna_and_rna.multiQC_config.yaml)'
-  log.info '    --intList      STRING      path/to/interval.list in chr:start-end for interval calling (default: standardly made reference interval list for species)'
-  log.info ''
+
+  ------------------------------------------------------------
+  NEXTFLOW 19.10 DNA AND RNA QC, TRIM, ALIGN, MUTATION CALLING
+  ------------------------------------------------------------
+
+  Purpose:
+  Analyse matched RNA- and DNA-seq, determine extent of same SNP, INDELs
+
+  Usage:
+  nextflow run brucemoran/dna_and_rna
+
+  Mandatory arguments:
+      -profile    Configuration profile (required: standard,singularity)
+      --sampleCsv      STRING      CSV format, headers: type (either "DNA" or "RNA"),sampleID,/path/to/read1.fq.gz,/path/to/read2.fq.gz
+      --refDir        STRING      dir in which reference data and required indices are held; if not specified, run refs.nf
+
+
+  Optional arguments:
+      --outDir        STRING        path/to/output
+      --multiqcConfig      STRING      config file for multiqc (default: bin/dna_and_rna.multiQC_config.yaml)
+      --intList      STRING      path/to/interval.list in chr:start-end for interval calling (default: standardly made reference interval list for species)
+
   exit 1
 }
 
