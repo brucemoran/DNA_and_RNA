@@ -24,34 +24,6 @@ def helpMessage() {
 
 if (params.help) exit 0, helpMessage()
 
-params.help = ""
-
-if (params.help) {
-
-  ------------------------------------------------------------
-  NEXTFLOW 19.10 DNA AND RNA QC, TRIM, ALIGN, MUTATION CALLING
-  ------------------------------------------------------------
-
-  Purpose:
-  Analyse matched RNA- and DNA-seq, determine extent of same SNP, INDELs
-
-  Usage:
-  nextflow run brucemoran/dna_and_rna
-
-  Mandatory arguments:
-      -profile    Configuration profile (required: standard,singularity)
-      --sampleCsv      STRING      CSV format, headers: type (either "DNA" or "RNA"),sampleID,/path/to/read1.fq.gz,/path/to/read2.fq.gz
-      --refDir        STRING      dir in which reference data and required indices are held; if not specified, run refs.nf
-
-
-  Optional arguments:
-      --outDir        STRING        path/to/output
-      --multiqcConfig      STRING      config file for multiqc (default: bin/dna_and_rna.multiQC_config.yaml)
-      --intList      STRING      path/to/interval.list in chr:start-end for interval calling (default: standardly made reference interval list for species)
-
-  exit 1
-}
-
 // -2 Test if refDir is defined, if not run DNAseq_references pipeline under defaults
 if(!params.refDir){
   exit 1, "Please run: nextflow run refs.nf --outDir work -profile standard,singularity, then specify: nextflow run brucemoran/dna_and_rna --refDir work/refs"
