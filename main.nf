@@ -55,7 +55,7 @@ ref.fa = Channel.value(file(params.references['genome'].fa))
 ref.fai = Channel.value(file(params.references['genome'].fai))
 ref.dict = Channel.value(file(params.references['genome'].dict))
 ref.bwa = Channel.value(file(params.references['genome'].bwa))
-ref.star = Channel.value(file(params.references['genome'].star))
+ref.star_base = Channel.value(file(params.references['genome'].star_base))
 ref.saf = Channel.value(file(params.references['genome'].saf))
 ref.intlist = Channel.value(file(params.references['genome'].intlist))
 ref.refflat = Channel.value(file(params.references['genome'].refflat))
@@ -177,7 +177,7 @@ process star {
 
   input:
   tuple val(type), val(sampleID), file(read1), file(read2) from star_in
-  file(starDir) from ref.star
+  file(star_base) from ref.star
 
   output:
   file('*') into completedstar
@@ -188,6 +188,7 @@ process star {
   type == "RNA"
 
   script:
+  starDir = "${star_base}/star_*"
   """
   BAMsortRAM=\$(echo ${task.memory} | sed 's/ G/000000000/' | \
     perl -ane '\$o=\$F[0]-1000000000; print "\$o\\n";')
