@@ -188,7 +188,7 @@ process star {
   type == "RNA"
 
   script:
-  star_dir = "${star_base}/star_*"
+  def star_dir = "${star_base}/star_*"
   """
   BAMsortRAM=\$(echo ${task.memory} | sed 's/ G/000000000/' | \
     perl -ane '\$o=\$F[0]-1000000000; print "\$o\\n";')
