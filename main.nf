@@ -51,7 +51,7 @@ ref = [
     exome: false
 ]
 
-ref.fa = Channel.value(file(${params.refDir}params.references['genome'].fa))
+ref.fa = Channel.value(file(params.references['genome'].fa))
 ref.fai = Channel.value(file(params.references['genome'].fai))
 ref.dict = Channel.value(file(params.references['genome'].dict))
 ref.bwa = Channel.value(file(params.references['genome'].bwa))
