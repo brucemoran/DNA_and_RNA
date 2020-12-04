@@ -85,7 +85,7 @@ process dictionary_pr {
 // 2.0: Fasta processing
 process bwa_index {
 
-  publishDir path: "${params.refDir}/bwa", mode: "copy", pattern: "*[!.fa, !.dict]"
+  publishDir path: "${params.refDir}/bwa", mode: "copy", pattern: "*.fa.*"
 
   input:
   file(fa) from fa_bwa
