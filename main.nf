@@ -177,7 +177,7 @@ process star {
 
   input:
   tuple val(type), val(sampleID), file(read1), file(read2) from star_in
-  file(star_base) from ref.star
+  file(star_base) from ref.star_base
 
   output:
   file('*') into completedstar
@@ -188,15 +188,15 @@ process star {
   type == "RNA"
 
   script:
-  starDir = "${star_base}/star_*"
+  star_dir = "${star_base}/star_*"
   """
   BAMsortRAM=\$(echo ${task.memory} | sed 's/ G/000000000/' | \
     perl -ane '\$o=\$F[0]-1000000000; print "\$o\\n";')
   DATE=\$(date +"%Y-%m-%dT%T")
 
   STAR --runThreadN ${task.cpus} \
-     --genomeDir $starDir \
-     --readFilesIn $read1 $read2 \
+     --genomeDir ${star_dir} \
+     --readFilesIn ${read1} ${read2} \
      --readFilesCommand "zcat" \
      --outFileNamePrefix $sampleID"." \
      --outSAMmode Full \
