@@ -76,7 +76,7 @@ process bbduk {
 
   label 'medmem'
 
-  publishDir path: "${params.outDir}/samples/$sampleID/bbduk", mode: "copy", pattern: "*.txt"
+  publishDir path: "${params.outDir}/samples/${sampleID}/bbduk", mode: "copy", pattern: "*.txt"
 
   input:
   tuple val(type), val(sampleID), file(read1), file(read2) from bbduk_in
@@ -91,11 +91,11 @@ process bbduk {
   """
   {
   ADAPTERS=\$(readlink -e /opt/miniconda/envs/dna_and_rna/opt/bbmap*/resources/adapters.fa)
-  sh bbduk.sh -Xmx$taskmem \
-    in1=$read1 \
-    in2=$read2 \
-    out1=$sampleID".bbduk.R1.fastq.gz" \
-    out2=$sampleID".bbduk.R2.fastq.gz" \
+  sh bbduk.sh -Xmx${taskmem} \
+    in1=${read1} \
+    in2=${read2} \
+    out1=${sampleID}".bbduk.R1.fastq.gz" \
+    out2=${sampleID}".bbduk.R2.fastq.gz" \
     k=31 \
     mink=5 \
     hdist=1 \
@@ -106,7 +106,7 @@ process bbduk {
     ref=\$ADAPTERS \
     tpe \
     tbo \
-    stats=$sampleID".bbduk.adapterstats.txt" \
+    stats=${sampleID}".bbduk.adapterstats.txt" \
     overwrite=T
   } 2>&1 | tee > ${sampleID}.bbduk.runstats.txt
   """
@@ -117,7 +117,7 @@ process bbduk {
 process fastp {
 
   label 'lowmem'
-  publishDir "${params.outDir}/samples/$sampleID/fastp", mode: "copy", pattern: "*.html"
+  publishDir "${params.outDir}/samples/${sampleID}/fastp", mode: "copy", pattern: "*.html"
 
   input:
   tuple val(type), val(sampleID), file(preread1), file(preread2), file(postread1), file(postread2) from fastp_in
@@ -128,9 +128,9 @@ process fastp {
 
   script:
   """
-  fastp -w ${task.cpus} -h $sampleID"_pre.fastp.html" -j $sampleID"_pre.fastp.json" --in1 $preread1 --in2 $preread2
+  fastp -w ${task.cpus} -h ${sampleID}"_pre.fastp.html" -j ${sampleID}"_pre.fastp.json" --in1 ${preread1} --in2 ${preread2}
 
-  fastp -w ${task.cpus} -h $sampleID"_post.fastp.html" -j $sampleID"_post.fastp.json" --in1 $postread1 --in2 $postread2
+  fastp -w ${task.cpus} -h ${sampleID}"_post.fastp.html" -j ${sampleID}"_post.fastp.json" --in1 ${postread1} --in2 ${postread2}
   """
 }
 
@@ -154,7 +154,7 @@ process bwamem {
   script:
   """
   DATE=\$(date +"%Y-%m-%dT%T")
-  RGLINE="@RG\\tID:$sampleID\\tPL:ILLUMINA\\tSM:$sampleID\\tDS:$type\\tCN:UCD\\tLB:LANE_X\\tDT:\$DATE"
+  RGLINE="@RG\\tID:${sampleID}\\tPL:ILLUMINA\\tSM:${sampleID}\\tDS:${type}\\tCN:UCD\\tLB:LANE_X\\tDT:\$DATE"
 
   bwa mem \
     -t${task.cpus} \
@@ -162,8 +162,8 @@ process bwamem {
     -R \$RGLINE \
     ${fa} \
     ${read1} ${read2} | \
-    samtools sort -T "tmp."$sampleID -o $sampleID".sort.bam"
-  samtools index $sampleID".sort.bam"
+    samtools sort -T "tmp."${sampleID} -o ${sampleID}".sort.bam"
+  samtools index ${sampleID}".sort.bam"
   """
 }
 
@@ -173,7 +173,7 @@ process star {
 
   label 'highmem'
 
-  publishDir "${params.outDir}/samples/$sampleID/STAR", mode: "copy", pattern: "${sampleID}.*[!bam,!bai]"
+  publishDir "${params.outDir}/samples/${sampleID}/STAR", mode: "copy", pattern: "${sampleID}.*[!bam,!bai]"
 
   input:
   tuple val(type), val(sampleID), file(read1), file(read2) from star_in
@@ -221,7 +221,7 @@ process mrkdup {
 
   label 'medmem'
 
-  publishDir path: "${params.outDir}/samples/$sampleID/picard", mode: "copy", pattern: "*.txt"
+  publishDir path: "${params.outDir}/samples/${sampleID}/picard", mode: "copy", pattern: "*.txt"
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from markdups_in
@@ -233,13 +233,13 @@ process mrkdup {
   script:
   taskmem = javaTaskmem("${task.memory}")
   """
-  OUTBAM=\$(echo $bam | sed 's/bam/md.bam/')
-  OUTMET=\$(echo $bam | sed 's/bam/md.metrics.txt/')
+  OUTBAM=\$(echo ${bam} | sed 's/bam/md.bam/')
+  OUTMET=\$(echo ${bam} | sed 's/bam/md.metrics.txt/')
   {
-  picard -Xmx$taskmem \
+  picard -Xmx${taskmem} \
     MarkDuplicates \
     TMP_DIR=./ \
-    INPUT=$bam \
+    INPUT=${bam} \
     OUTPUT=/dev/stdout \
     COMPRESSION_LEVEL=0 \
     QUIET=TRUE \
@@ -260,12 +260,12 @@ process gtkrcl {
 
   label 'medmem'
 
-  publishDir path: "${params.outDir}/samples/$sampleID/gatk4", mode: "copy", pattern: "*.GATK4_BQSR.log.txt "
+  publishDir path: "${params.outDir}/samples/${sampleID}/gatk4", mode: "copy", pattern: "*.GATK4_BQSR.log.txt "
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gatk4recal_in
   file(fa) from ref.fa
-  file(vcf) from ref.vcf
+  file(vcfd) from ref.vcf
   file(intlisd) from ref.intlist
 
   output:
@@ -275,14 +275,15 @@ process gtkrcl {
 
   script:
   intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
+  vcf = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
   """
   {
-  INBAM=$bam
-  if [[ $type == "RNA" ]];then
+  INBAM=${bam}
+  if [[ ${type} == "RNA" ]];then
     mkdir tmp
     gatk SplitNCigarReads \
-      -R $fa \
-      -I $bam \
+      -R ${fa} \
+      -I ${bam} \
       --tmp-dir tmp \
       -O scn.bam
     samtools index scn.bam
@@ -290,28 +291,28 @@ process gtkrcl {
     rm -rf tmp
   fi
 
-  INTTEST=\$(grep -m1 "@SQ" $intlist | perl -ane 'print \$F[0];')
+  INTTEST=\$(grep -m1 "@SQ" ${intlist} | perl -ane 'print \$F[0];')
   if [[ ! \$INTTEST == "@SQ" ]]; then
-    perl -ane 'print "\$F[0]\\n";' $intlist > int.list
+    perl -ane 'print "\$F[0]\\n";' ${intlist} > int.list
     INTLIST=int.list
   else
-    cp $intlist interval.list.interval_list
+    cp ${intlist} interval.list.interval_list
     INTLIST=interval.list.interval_list
   fi
 
   gatk BaseRecalibrator \
-    -R $fa \
+    -R ${fa} \
     -I \$INBAM \
-    --known-sites $dbsnp \
+    --known-sites ${vcf} \
     --use-original-qualities \
     -O ${sampleID}.recal_data.table \
     --disable-sequence-dictionary-validation true \
     -L \$INTLIST
 
   #ApplyBQSR
-  OUTBAM=\$(echo $bam | sed 's/bam/bqsr.bam/')
+  OUTBAM=\$(echo ${bam} | sed 's/bam/bqsr.bam/')
   gatk ApplyBQSR \
-    -R $fa \
+    -R ${fa} \
     -I \$INBAM \
     --bqsr-recal-file ${sampleID}.recal_data.table \
     --add-output-sam-program-record \
@@ -330,7 +331,7 @@ process gatkHC {
 
   label 'medmem'
 
-  publishDir "${params.outDir}/samples/$sampleID/gatk4", mode: "copy", pattern: "*.log.txt"
+  publishDir "${params.outDir}/samples/${sampleID}/gatk4", mode: "copy", pattern: "*.log.txt"
   publishDir path: "${params.outDir}/output/vcf", mode: "copy", pattern: '*.vcf.*'
 
   input:
@@ -350,30 +351,30 @@ process gatkHC {
   vcf = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
   """
   {
-  INTTEST=\$(grep -m1 "@SQ" $intlist | perl -ane 'print \$F[0];')
+  INTTEST=\$(grep -m1 "@SQ" ${intlist} | perl -ane 'print \$F[0];')
   if [[ ! \$INTTEST == "@SQ" ]]; then
-    perl -ane 'print "\$F[0]\\n";' $intlist > int.list
+    perl -ane 'print "\$F[0]\\n";' ${intlist} > int.list
     INTLIST=int.list
   else
-    cp $intlist interval.list.interval_list
+    cp ${intlist} interval.list.interval_list
     INTLIST=interval.list.interval_list
   fi
 
-  gatk --java-options -Xmx$taskmem HaplotypeCaller \
-    -R $fa \
-    -I $bam \
+  gatk --java-options -Xmx${taskmem} HaplotypeCaller \
+    -R ${fa} \
+    -I ${bam} \
     -ERC NONE \
     --dont-use-soft-clipped-bases \
     --standard-min-confidence-threshold-for-calling 20 \
-    --dbsnp $vcf \
+    --dbsnp ${vcfg} \
     --pair-hmm-implementation FASTEST_AVAILABLE \
     --native-pair-hmm-threads ${task.cpus} \
-    -O $sampleID"."$type".vcf" \
+    -O ${sampleID}"."${type}".vcf" \
     --disable-sequence-dictionary-validation true \
     -L \$INTLIST
 
-  bgzip $sampleID"."$type".vcf"
-  tabix $sampleID"."$type".vcf.gz"
+  bgzip ${sampleID}"."${type}".vcf"
+  tabix ${sampleID}"."${type}".vcf.gz"
 
   } 2>&1 | tee > ${sampleID}.GATK4_HC.log.txt
   """
@@ -416,7 +417,7 @@ process mltmet {
 
   label 'lowmem'
 
-  publishDir "${params.outDir}/samples/$sampleID/metrics"
+  publishDir "${params.outDir}/samples/${sampleID}/metrics"
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gmultimetric_in
@@ -434,36 +435,36 @@ process mltmet {
   intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
   """
   {
-  picard -Xmx$taskmem CollectHsMetrics \
-    I=$bam \
-    O=$sampleID".hs_metrics.txt" \
+  picard -Xmx${taskmem} CollectHsMetrics \
+    I=${bam} \
+    O=${sampleID}".hs_metrics.txt" \
     TMP_DIR=./ \
-    R=$fa \
-    BAIT_INTERVALS=$intlist  \
-    TARGET_INTERVALS=$intlist
+    R=${fa} \
+    BAIT_INTERVALS=${intlist}  \
+    TARGET_INTERVALS=${intlist}
 
-  picard -Xmx$taskmem CollectAlignmentSummaryMetrics \
-    I=$bam \
-    O=$sampleID".AlignmentSummaryMetrics.txt" \
+  picard -Xmx${taskmem} CollectAlignmentSummaryMetrics \
+    I=${bam} \
+    O=${sampleID}".AlignmentSummaryMetrics.txt" \
     TMP_DIR=./ \
-    R=$fa
+    R=${fa}
 
-  picard -Xmx$taskmem CollectMultipleMetrics \
-    I=$bam \
-    O=$sampleID".CollectMultipleMetrics.txt" \
+  picard -Xmx${taskmem} CollectMultipleMetrics \
+    I=${bam} \
+    O=${sampleID}".CollectMultipleMetrics.txt" \
     TMP_DIR=./ \
-    R=$fa
+    R=${fa}
 
-  picard -Xmx$taskmem CollectSequencingArtifactMetrics \
-    I=$bam \
-    O=$sampleID".artifact_metrics.txt" \
+  picard -Xmx${taskmem} CollectSequencingArtifactMetrics \
+    I=${bam} \
+    O=${sampleID}".artifact_metrics.txt" \
     TMP_DIR=./ \
-    R=$fa
+    R=${fa}
 
-  picard -Xmx$taskmem CollectInsertSizeMetrics \
-    I=$bam \
-    O=$sampleID".insert_size_metrics.txt" \
-    H=$bam".histogram.pdf" \
+  picard -Xmx${taskmem} CollectInsertSizeMetrics \
+    I=${bam} \
+    O=${sampleID}".insert_size_metrics.txt" \
+    H=${bam}".histogram.pdf" \
     TMP_DIR=./
 
   } 2>&1 | tee > ${sampleID}.picard.metrics.log
