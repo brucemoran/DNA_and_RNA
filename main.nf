@@ -63,7 +63,7 @@ ref.vep = Channel.value(file(params.references['genome'].vep))
 ref.exome = Channel.value(file(params.references['genome'].exome))
 
 //setting of intlist based on exome extant
-reference.intlist = ref.exome == null ? ref.inlist : ref.exome
+ref.intlist = ref.exome == null ? ref.inlist : ref.exome
 
 // 0.00: Input using sample.csv
 Channel.fromPath("$params.sampleCsv")
