@@ -33,7 +33,7 @@ if (params.help) exit 0, helpMessage()
 
 // 0.0: Global Variables
 //outDir output, tag
-params.outDir = "${params.vepGenome}_${params.vepVersion}"
+params.outDir = "${params.refDir}"
 params.tag = Channel.from("${params.vepGenome}_${params.vepVersion}").getVal()
 
 // 1.0: Download required files
