@@ -25,7 +25,7 @@ def helpMessage() {
 if (params.help) exit 0, helpMessage()
 
 // -2 Test if refDir is defined, if not run DNAseq_references pipeline under defaults
-if(!params.refsDir){
+if(!params.refDir){
   exit 1, "Please run: nextflow run brucemoran/DNA_and_RNA/download-references.nf --help"
 }
 
