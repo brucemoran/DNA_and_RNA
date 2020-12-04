@@ -64,6 +64,7 @@ ref.exome = Channel.value(file(params.references['genome'].exome))
 
 //setting of intlist based on exome extant (== false if not)
 ref.intlist = ref.exome == false ? ref.inlist : ref.exome
+Channel.from(ref.exome).println { it }
 
 // 0.00: Input using sample.csv
 Channel.fromPath("$params.sampleCsv")
