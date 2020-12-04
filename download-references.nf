@@ -32,15 +32,16 @@ def helpMessage() {
 if (params.help) exit 0, helpMessage()
 
 // 0.0: Global Variables
-//refDir output, tag
+//outDir output, tag
+params.outDir = "${params.refDir}/${params.vepGenome}_${params.vepVersion}"
 params.tag = Channel.from("${params.vepGenome}_${params.vepVersion}").getVal()
 
 // 1.0: Download required files
 process downloads {
 
-  publishDir path: "${params.refDir}/gtf", mode: "copy", pattern: "*gtf"
-  publishDir path: "${params.refDir}/fa", mode: "copy", pattern: "*fa"
-  publishDir path: "${params.refDir}/vcf", mode: "copy", pattern: "*vcf"
+  publishDir path: "${params.outDir}/gtf", mode: "copy", pattern: "*gtf"
+  publishDir path: "${params.outDir}/fa", mode: "copy", pattern: "*fa"
+  publishDir path: "${params.outDir}/vcf", mode: "copy", pattern: "*vcf"
 
   input:
   val(vepGenome) from Channel.value(params.vepGenome)
@@ -64,7 +65,7 @@ process downloads {
 // 1.1: Dictionary of fa
 process dictionary_pr {
 
-  publishDir path: "${params.refDir}/fa", mode: "copy"
+  publishDir path: "${params.outDir}/fa", mode: "copy"
 
   input:
   file(fa) from fa_dict
@@ -84,7 +85,7 @@ process dictionary_pr {
 // 2.0: Fasta processing
 process bwa_index {
 
-  publishDir path: "${params.refDir}/bwa", mode: "copy", pattern: "*.fa.*"
+  publishDir path: "${params.outDir}/bwa", mode: "copy", pattern: "*.fa.*"
 
   input:
   file(fa) from fa_bwa
@@ -108,15 +109,15 @@ process ln_bwa {
 
   script:
   """
-  ln -s ${workflow.launchDir}/${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.fa ${workflow.launchDir}/${params.refDir}/bwa/
-  ln -s ${workflow.launchDir}/${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.dict ${workflow.launchDir}/${params.refDir}/bwa/
+  ln -s ${workflow.launchDir}/${params.outDir}/fa/${params.vepGenome}_${params.vepVersion}.fa ${workflow.launchDir}/${params.outDir}/bwa/
+  ln -s ${workflow.launchDir}/${params.outDir}/fa/${params.vepGenome}_${params.vepVersion}.dict ${workflow.launchDir}/${params.outDir}/bwa/
   """
 }
 
 // 2.2: Bed for exome
 process exomebed_pr {
 
-  publishDir path: "${params.refDir}/exome", mode: "copy"
+  publishDir path: "${params.outDir}/exome", mode: "copy"
 
   input:
   file(dict) from dict_exome
@@ -155,7 +156,7 @@ process exomebed_pr {
 // 2.3: Tabix those requiring tabixing
 process vcf_pr {
 
-  publishDir path: "${params.refDir}/exome", mode: "copy"
+  publishDir path: "${params.outDir}/exome", mode: "copy"
 
   input:
   file(tbtbx) from exome_tabix
@@ -175,7 +176,7 @@ process vcf_pr {
 // 2.4: Tabix those requiring tabixing
 process indexfeaturefile_pr {
 
-  publishDir path: "${params.refDir}/vcf", mode: "copy"
+  publishDir path: "${params.outDir}/vcf", mode: "copy"
 
   input:
   file(tbtbx) from vcf_tabix
@@ -195,7 +196,7 @@ process indexfeaturefile_pr {
 // 3.0: STAR geneomeGenerate
 process star_index {
 
-  publishDir "${params.refDir}/star/star_${sjdbd}", mode: "copy", pattern: "*[!.fa, !.gtf]"
+  publishDir "${params.outDir}/star/star_${sjdbd}", mode: "copy", pattern: "*[!.fa, !.gtf]"
 
   input:
   file(fa) from fa_star
@@ -221,7 +222,7 @@ process star_index {
 // 4.0: refFlat conversion of GTF
 process reflat_pr {
 
-  publishDir "${params.refDir}/refflat", mode: "copy"
+  publishDir "${params.outDir}/refflat", mode: "copy"
 
   input:
   file(gtf) from gtf_refflat
@@ -243,7 +244,7 @@ process reflat_pr {
 // 5.0: rRNA_intervalList
 process rrna_pr {
 
-  publishDir "${params.refDir}/rrna", mode: "copy"
+  publishDir "${params.outDir}/rrna", mode: "copy"
 
   input:
   file(gtf) from gtf_rrna
@@ -271,7 +272,7 @@ process rrna_pr {
 
 process gatk4snv_pr {
 
-  publishDir path: "${params.refDir}/intlist", mode: 'copy'
+  publishDir path: "${params.outDir}/intlist", mode: 'copy'
 
   input:
   file(fa) from fa_gatk4
@@ -320,7 +321,7 @@ process gatk4snv_pr {
 // 7.0 SAF for featureCounts
 process gtfsaf_pr {
 
-  publishDir path: "${params.refDir}/saf", mode: 'copy'
+  publishDir path: "${params.outDir}/saf", mode: 'copy'
 
   input:
   file(gtf) from gtf_saf
@@ -340,7 +341,7 @@ process gtfsaf_pr {
 // 8.0 VEP
 process vep_install {
 
-  publishDir path: "${params.refDir}", mode: 'copy'
+  publishDir path: "${params.outDir}", mode: 'copy'
 
   output:
   file(".vep") into vep_cache
