@@ -188,7 +188,8 @@ process star {
   type == "RNA"
 
   script:
-  def star_dir = "${star_base}/star_*"
+  star_dir = "${star_base}/star_*"
+  ram = "${task.memory}".replaceAll(" G", "000000000")
   """
   BAMsortRAM=\$(echo ${task.memory} | sed 's/ G/000000000/' | \
     perl -ane '\$o=\$F[0]-1000000000; print "\$o\\n";')
@@ -198,7 +199,7 @@ process star {
      --genomeDir ${star_dir} \
      --readFilesIn ${read1} ${read2} \
      --readFilesCommand "zcat" \
-     --outFileNamePrefix $sampleID"." \
+     --outFileNamePrefix ${sampleID}"." \
      --outSAMmode Full \
      --outSAMstrandField intronMotif \
      --outSAMattributes All \
@@ -207,8 +208,8 @@ process star {
      --outSAMtype BAM SortedByCoordinate \
      --quantMode TranscriptomeSAM GeneCounts \
      --twopassMode Basic \
-     --limitBAMsortRAM \$BAMsortRAM \
-     --outSAMattrRGline ID:$sampleID PL:ILLUMINA SM:$sampleID DS:$type CN:UCD LB:LANE_X DT:\$DATE
+     --limitBAMsortRAM ${ram} \
+     --outSAMattrRGline ID:${sampleID} PL:ILLUMINA SM:${sampleID} DS:${type} CN:UCD LB:LANE_X DT:\$DATE
   samtools index "${sampleID}.Aligned.sortedByCoord.out.bam"
   """
 }
