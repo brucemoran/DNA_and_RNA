@@ -51,16 +51,16 @@ ref = [
     exome: false
 ]
 
-ref.fa = Channel.value(file(params.references.fa))
-ref.fai = Channel.value(file(params.references.fai))
-ref.dict = Channel.value(file(params.references.dict))
-ref.bwa = Channel.value(file(params.references.bwa))
-ref.star = Channel.value(file(params.references.star))
-ref.saf = Channel.value(file(params.references.saf))
-ref.intlist = Channel.value(file(params.references.intlist))
-ref.refflat = Channel.value(file(params.references.refflat))
-ref.vep = Channel.value(file(params.references.vep))
-ref.exome = Channel.value(file(params.references.exome))
+ref.fa = Channel.value(file(params.references[params.genomes].fa))
+ref.fai = Channel.value(file(params.references[params.genomes].fai))
+ref.dict = Channel.value(file(params.references[params.genomes].dict))
+ref.bwa = Channel.value(file(params.references[params.genomes].bwa))
+ref.star = Channel.value(file(params.references[params.genomes].star))
+ref.saf = Channel.value(file(params.references[params.genomes].saf))
+ref.intlist = Channel.value(file(params.references[params.genomes].intlist))
+ref.refflat = Channel.value(file(params.references[params.genomes].refflat))
+ref.vep = Channel.value(file(params.references[params.genomes].vep))
+ref.exome = Channel.value(file(params.references[params.genomes].exome))
 
 //setting of intlist based on exome extant
 reference.intlist = ref.exome == null ? ref.inlist : ref.exome
