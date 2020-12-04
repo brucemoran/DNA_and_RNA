@@ -41,7 +41,7 @@ ref = [
     fai: false,
     dict: false,
     bwa: false,
-    star: false,
+    star_base: false,
     saf: false,
     intlist: false,
     refflat: false,
