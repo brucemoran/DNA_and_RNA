@@ -266,6 +266,7 @@ process gtkrcl {
   tuple val(type), val(sampleID), file(bam), file(bai) from gatk4recal_in
   file(fa) from ref.fa
   file(fai) from ref.fai
+  file(dict) from ref.dict
   file(vcfd) from ref.vcf
   file(intlisd) from ref.intlist
 
@@ -339,6 +340,7 @@ process gatkHC {
   tuple val(type), val(sampleID), file(bam), file(bai) from gatkhc_in
   file(fa) from ref.fa
   file(fai) from ref.fai
+  file(dict) from ref.dict
   file(vcfd) from ref.vcf
   file(intlisd) from ref.intlist
 
@@ -425,6 +427,7 @@ process mltmet {
   tuple val(type), val(sampleID), file(bam), file(bai) from gmultimetric_in
   file(fa) from ref.fa
   file(fai) from ref.fai
+  file(dict) from ref.dict
   file(intlisd) from ref.intlist
 
   output:
@@ -505,6 +508,7 @@ process vepann {
   file(vcf) from vep_vcf
   file(fa) from ref.fa
   file(fai) from ref.fai
+  file(dict) from ref.dict
   file(vepcache) from ref.vep
 
   output:
