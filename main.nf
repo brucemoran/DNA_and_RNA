@@ -10,7 +10,7 @@ def helpMessage() {
   Mandatory arguments:
       -profile          [str]   Configuration profile (required: standard,singularity)
       --sampleCsv       [str]   CSV format, headers: type (either "DNA" or "RNA"),sampleID,/path/to/read1.fq.gz,/path/to/read2.fq.gz
-      --refsDir          [str]   dir in which reference data and required indices are held; created by download-references.nf; this is the base dir of vepGenome_vepVersion dir with references therein
+      --refDir          [str]   dir in which reference data and required indices are held; created by download-references.nf; this is the base dir of vepGenome_vepVersion dir with references therein
       --vepGenome       [str]   VEP genome ID used in creating refDir params.vepGenome_params/vepVersion/ (e.g. "Rnor_6")
       --vepVersion      [int]   VEP version used in creating refDir params.vepGenome_params/vepVersion/ (e.g. 100)
       --vepSpecies      [str]   VEP species for (e.g. "rattus_norvegicus")
@@ -51,7 +51,7 @@ ref = [
     exome: false
 ]
 
-ref.fa = Channel.value(file(params.references['genome'].fa))
+ref.fa = Channel.value(file(${params.refDir}params.references['genome'].fa))
 ref.fai = Channel.value(file(params.references['genome'].fai))
 ref.dict = Channel.value(file(params.references['genome'].dict))
 ref.bwa = Channel.value(file(params.references['genome'].bwa))
