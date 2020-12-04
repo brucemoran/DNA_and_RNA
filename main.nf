@@ -27,16 +27,12 @@ if (params.help) {
   exit 1
 }
 
-/* -2 Test if refDir is defined, if not run DNAseq_references pipeline under defaults
-*/
+// -2 Test if refDir is defined, if not run DNAseq_references pipeline under defaults
 if(!params.refDir){
   exit 1, "Please run: nextflow run refs.nf --outDir work -profile standard,singularity, then specify: nextflow run brucemoran/dna_and_rna --refDir work/refs"
 }
 
 //Java task memory allocation via task.memory
-javaTaskmem = { it.replace(" GB", "g") }
-
-/Java task memory allocation via task.memory
 javaTaskmem = { it.replace(" GB", "g") }
 
 //Reference data as value channels and reusable therefore
@@ -69,15 +65,13 @@ ref.exome = Channel.value(file(params.references.exome))
 //setting of intlist based on exome extant
 reference.intlist = ref.exome == null ? ref.inlist : ref.exome
 
-/* 0.00: Input using sample.csv
-*/
+// 0.00: Input using sample.csv
 Channel.fromPath("$params.sampleCsv")
        .splitCsv( header: true )
        .map { row -> [row.type, row.sampleID, file(row.read1, checkIfExists: true), file(row.read2, checkIfExists: true)] }
        .set { bbduk_in }
 
-/* 0.01: Input trimming
-*/
+// 0.01: Input trimming
 process bbduk {
 
   label 'medmem'
