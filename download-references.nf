@@ -110,8 +110,8 @@ process ln_bwa {
   script:
   """
   sleep 1000
-  ln -s ${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.fa ${params.refDir}/bwa/
-  ln -s ${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.dict ${params.refDir}/bwa/
+  ln -s ${workflow.projectDir}/${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.fa ${params.refDir}/bwa/
+  ln -s ${workflow.projectDir}/${params.refDir}/fa/${params.vepGenome}_${params.vepVersion}.dict ${params.refDir}/bwa/
   """
 }
 
