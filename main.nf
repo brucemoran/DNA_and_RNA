@@ -265,6 +265,7 @@ process gtkrcl {
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gatk4recal_in
   file(fa) from ref.fa
+  file(fai) from ref.fai
   file(vcfd) from ref.vcf
   file(intlisd) from ref.intlist
 
@@ -274,7 +275,7 @@ process gtkrcl {
   file("${sampleID}.GATK4_BQSR.log.txt") into bqsr_log
 
   script:
-  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
+  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list.gz"
   vcf = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
   """
   {
@@ -337,6 +338,7 @@ process gatkHC {
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gatkhc_in
   file(fa) from ref.fa
+  file(fai) from ref.fai
   file(vcfd) from ref.vcf
   file(intlisd) from ref.intlist
 
@@ -422,6 +424,7 @@ process mltmet {
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gmultimetric_in
   file(fa) from ref.fa
+  file(fai) from ref.fai
   file(intlisd) from ref.intlist
 
   output:
@@ -501,6 +504,7 @@ process vepann {
   input:
   file(vcf) from vep_vcf
   file(fa) from ref.fa
+  file(fai) from ref.fai
   file(vepcache) from ref.vep
 
   output:
