@@ -76,7 +76,7 @@ process bbduk {
 
   label 'medmem'
 
-  publishDir path: "${params.outDir}/DNA_and_RNA/samples/$sampleID/bbduk", mode: "copy", pattern: "*.txt"
+  publishDir path: "${params.outDir}/samples/$sampleID/bbduk", mode: "copy", pattern: "*.txt"
 
   input:
   tuple val(type), val(sampleID), file(read1), file(read2) from bbduk_in
@@ -173,7 +173,7 @@ process star {
 
   label 'highmem'
 
-  publishDir "${params.outDir}/DNA_and_RNA/samples/$sampleID/STAR", mode: "copy", pattern: "${sampleID}.*[!bam,!bai]"
+  publishDir "${params.outDir}/samples/$sampleID/STAR", mode: "copy", pattern: "${sampleID}.*[!bam,!bai]"
 
   input:
   tuple val(type), val(sampleID), file(read1), file(read2) from star_in
@@ -220,7 +220,7 @@ process mrkdup {
 
   label 'medmem'
 
-  publishDir path: "${params.outDir}/DNA_and_RNA/samples/$sampleID/picard", mode: "copy", pattern: "*.txt"
+  publishDir path: "${params.outDir}/samples/$sampleID/picard", mode: "copy", pattern: "*.txt"
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from markdups_in
@@ -259,7 +259,7 @@ process gtkrcl {
 
   label 'medmem'
 
-  publishDir path: "${params.outDir}/DNA_and_RNA/samples/$sampleID/gatk4", mode: "copy", pattern: "*.GATK4_BQSR.log.txt "
+  publishDir path: "${params.outDir}/samples/$sampleID/gatk4", mode: "copy", pattern: "*.GATK4_BQSR.log.txt "
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gatk4recal_in
@@ -329,8 +329,8 @@ process gatkHC {
 
   label 'medmem'
 
-  publishDir "${params.outDir}/DNA_and_RNA/samples/$sampleID/gatk4", mode: "copy", pattern: "*.log.txt"
-  publishDir path: "${params.outDir}/DNA_and_RNA/output/vcf", mode: "copy", pattern: '*.vcf.*'
+  publishDir "${params.outDir}/samples/$sampleID/gatk4", mode: "copy", pattern: "*.log.txt"
+  publishDir path: "${params.outDir}/output/vcf", mode: "copy", pattern: '*.vcf.*'
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gatkhc_in
@@ -390,7 +390,7 @@ process mergevcfs {
 
   label 'highmem'
 
-  publishDir "${params.outDir}/DNA_and_RNA/output/vcf", mode: "copy"
+  publishDir "${params.outDir}/output/vcf", mode: "copy"
 
   input:
   tuple val(first), file(vcfs) from merge_inc
@@ -415,7 +415,7 @@ process mltmet {
 
   label 'lowmem'
 
-  publishDir "${params.outDir}/DNA_and_RNA/samples/$sampleID/metrics"
+  publishDir "${params.outDir}/samples/$sampleID/metrics"
 
   input:
   tuple val(type), val(sampleID), file(bam), file(bai) from gmultimetric_in
@@ -473,7 +473,7 @@ process mltmet {
 */
 process mltiQC {
 
-  publishDir path: "${params.outDir}/DNA_and_RNA/reports", mode: "copy", pattern: "*html"
+  publishDir path: "${params.outDir}/reports", mode: "copy", pattern: "*html"
 
   input:
   file(fastps) from fastp_multiqc.collect()
@@ -494,7 +494,7 @@ process mltiQC {
 
 process vepann {
 
-  publishDir path: "${params.outDir}/DNA_and_RNA/output/vcf", mode: "copy", pattern: '*.vcf'
+  publishDir path: "${params.outDir}/output/vcf", mode: "copy", pattern: '*.vcf'
 
   input:
   file(vcf) from vep_vcf
@@ -531,7 +531,7 @@ process vepann {
 
 // process vcf_report {
 //
-//   publishDir path: "${params.outDir}/DNA_and_RNA/output/vcf", mode: "copy", pattern: '*.vcf'
+//   publishDir path: "${params.outDir}/output/vcf", mode: "copy", pattern: '*.vcf'
 //
 //   input:
 //   file(vcf) from vcf_stats
