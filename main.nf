@@ -59,6 +59,7 @@ ref.star_base = Channel.value(file(params.references['genome'].star_base))
 ref.saf = Channel.value(file(params.references['genome'].saf))
 ref.intlist = Channel.value(file(params.references['genome'].intlist))
 ref.refflat = Channel.value(file(params.references['genome'].refflat))
+ref.vcf = Channel.value(file(params.references['genome'].vcf))
 ref.vep = Channel.value(file(params.references['genome'].vep))
 ref.exome = Channel.value(file(params.references['genome'].exome))
 
@@ -277,6 +278,7 @@ process gtkrcl {
 
   script:
   intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
+  intlistgz = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list.gz"
   vcf = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
   """
   {
