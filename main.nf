@@ -247,8 +247,7 @@ process mrkdup {
     METRICS_FILE=\$OUTMET \
     REMOVE_DUPLICATES=FALSE \
     ASSUME_SORTED=TRUE \
-    VALIDATION_STRINGENCY=LENIENT \
-    VERBOSITY=ERROR | samtools view -Shb - > \$OUTBAM
+    VALIDATION_STRINGENCY=LENIENT | samtools view -Shb - > \$OUTBAM
 
   samtools index \$OUTBAM
   } 2>&1 | tee > ${sampleID}.picard_markDuplicates.log.txt
