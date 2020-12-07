@@ -276,8 +276,8 @@ process gtkrcl {
   file("${sampleID}.GATK4_BQSR.log.txt") into bqsr_log
 
   script:
-  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
-  intlistgz = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list.gz"
+  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.genes.interval_list"
+  intlistgz = "${intlisd}/${params.vepGenome}_${params.vepVersion}.genes.interval_list.gz"
   vcf = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
   """
   {
