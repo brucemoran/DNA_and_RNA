@@ -343,7 +343,7 @@ process gatkHC {
 
   script:
   taskmem = javaTaskmem("${task.memory}")
-  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
+  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.genes.interval_list"
   vcfgz = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
   """
   {
