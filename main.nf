@@ -278,7 +278,7 @@ process gtkrcl {
   script:
   intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.genes.interval_list"
   intlistgz = "${intlisd}/${params.vepGenome}_${params.vepVersion}.genes.interval_list.gz"
-  vcf = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
+  vcfgz = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
   """
   {
   INBAM=${bam}
@@ -294,23 +294,14 @@ process gtkrcl {
     rm -rf tmp
   fi
 
-  INTTEST=\$(grep -m1 "@SQ" ${intlist} | perl -ane 'print \$F[0];')
-  if [[ ! \$INTTEST == "@SQ" ]]; then
-    perl -ane 'print "\$F[0]\\n";' ${intlist} > int.list
-    INTLIST=int.list
-  else
-    cp ${intlist} interval.list.interval_list
-    INTLIST=interval.list.interval_list
-  fi
-
   gatk BaseRecalibrator \
     -R ${fa} \
     -I \$INBAM \
-    --known-sites ${vcf} \
+    --known-sites ${vcfgz} \
     --use-original-qualities \
     -O ${sampleID}.recal_data.table \
     --disable-sequence-dictionary-validation true \
-    -L \$INTLIST
+    -L ${intlist}
 
   #ApplyBQSR
   OUTBAM=\$(echo ${bam} | sed 's/bam/bqsr.bam/')
@@ -321,7 +312,7 @@ process gtkrcl {
     --add-output-sam-program-record \
     --use-original-qualities \
     -O \$OUTBAM \
-    -L \$INTLIST
+    -L ${intlist}
 
   samtools index \$OUTBAM \$OUTBAM".bai"
   } 2>&1 | tee >  ${sampleID}.GATK4_BQSR.log.txt
@@ -353,30 +344,21 @@ process gatkHC {
   script:
   taskmem = javaTaskmem("${task.memory}")
   intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
-  vcf = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
+  vcfgz = "${vcfd}/${params.vepGenome}_${params.vepVersion}.vcf.gz"
   """
   {
-  INTTEST=\$(grep -m1 "@SQ" ${intlist} | perl -ane 'print \$F[0];')
-  if [[ ! \$INTTEST == "@SQ" ]]; then
-    perl -ane 'print "\$F[0]\\n";' ${intlist} > int.list
-    INTLIST=int.list
-  else
-    cp ${intlist} interval.list.interval_list
-    INTLIST=interval.list.interval_list
-  fi
-
-  gatk --java-options -Xmx${taskmem} HaplotypeCaller \
+    gatk --java-options -Xmx${taskmem} HaplotypeCaller \
     -R ${fa} \
     -I ${bam} \
     -ERC NONE \
     --dont-use-soft-clipped-bases \
     --standard-min-confidence-threshold-for-calling 20 \
-    --dbsnp ${vcfg} \
+    --dbsnp ${vcfgz} \
     --pair-hmm-implementation FASTEST_AVAILABLE \
     --native-pair-hmm-threads ${task.cpus} \
     -O ${sampleID}"."${type}".vcf" \
     --disable-sequence-dictionary-validation true \
-    -L \$INTLIST
+    -L ${intlist}
 
   bgzip ${sampleID}"."${type}".vcf"
   tabix ${sampleID}"."${type}".vcf.gz"
@@ -439,7 +421,7 @@ process mltmet {
 
   script:
   taskmem = javaTaskmem("${task.memory}")
-  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.interval_list"
+  intlist = "${intlisd}/${params.vepGenome}_${params.vepVersion}.genes.interval_list"
   """
   {
   picard -Xmx${taskmem} CollectHsMetrics \
